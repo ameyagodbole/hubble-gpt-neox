@@ -605,7 +605,7 @@ def forward_step(
 ):
     """Forward step."""
     if neox_args.is_pipe_parallel:
-        return model.eval_batch(data_iterator, return_logits=return_logits)
+        return model.eval_batch(data_iterator, return_logits=return_logits), {}
 
     # Get the batch.
     if neox_args.memory_profiling and neox_args.iteration:
