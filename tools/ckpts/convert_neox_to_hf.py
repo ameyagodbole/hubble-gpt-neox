@@ -444,10 +444,10 @@ def reshard_and_split_qkv(
 
 def get_mlp_naming_convention(loaded_tp_ranks, layer_idx, sequential):
     """Determine whether the checkpoint uses the legacy or new MLP naming convention."""
-    print(list(loaded_tp_ranks[0]["module"].keys()))
+    print(list(loaded_tp_ranks[0].keys()))
     if any(
         [
-            ["mlp.linear1.weight" in key for key in list(state_dict["module"].keys())]
+            ["mlp.linear1.weight" in key for key in list(state_dict.keys())]
             for state_dict in loaded_tp_ranks
         ]
     ):
@@ -456,7 +456,7 @@ def get_mlp_naming_convention(loaded_tp_ranks, layer_idx, sequential):
         [
             [
                 "mlp.dense_h_to_4h.weight" in key
-                for key in list(state_dict["module"].keys())
+                for key in list(state_dict.keys())
             ]
             for state_dict in loaded_tp_ranks
         ]
@@ -892,6 +892,18 @@ def main(input_args=None, overwrite_values=None):
             )
             if args.pad_token_id != -1:
                 tokenizer.pad_token_id = args.pad_token_id
+            print("loaded tokenizer: ", tokenizer)
+            tokenizer.save_pretrained(args.output_dir)
+            print("tokenizer saved!")
+        elif tokenizer_type == "GPT2BPETokenizer":
+            print(f"saving GPT2BPETokenizer tokenizer from file {get_key(loaded_config, 'vocab-file'), get_key(loaded_config, 'merge-file')}")
+
+            from transformers import GPT2Tokenizer
+            tokenizer = GPT2Tokenizer(
+                vocab_file=get_key(loaded_config, "vocab-file"),
+                merges_file=get_key(loaded_config, "merge-file"),
+                errors="replace", special_tokens=[], max_len=None
+            )
             print("loaded tokenizer: ", tokenizer)
             tokenizer.save_pretrained(args.output_dir)
             print("tokenizer saved!")
