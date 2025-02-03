@@ -164,7 +164,7 @@ def yield_from_files(fnames: list, semaphore):
             semaphore.acquire()
             yield f
 
-    for fname in fnames:
+    for fname in filter(lambda x: x, fnames):
         semaphore.acquire()
 
         yield from yielder(fname, semaphore)

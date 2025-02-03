@@ -30,6 +30,8 @@ def main(args):
         ), f"ERROR: {ext_pair} file not provided for {os.path.join(args.input, prefix)}"
 
         prefixes.add(prefix)
+    
+    print("Identified perfixes:", prefixes)
 
     builder = None
     for prefix in sorted(prefixes):
@@ -49,6 +51,7 @@ def main(args):
 
             del dataset
 
+        print(f"Merging:", os.path.join(args.input, prefix))
         builder.merge_file_(os.path.join(args.input, prefix))
 
     builder.finalize(args.output_prefix + ".idx")
