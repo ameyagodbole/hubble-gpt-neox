@@ -369,7 +369,7 @@ class EvalHarnessAdapter(HFLM):
             self.model.first_output_send = True
             self.model.pipe_recv_buf = None
 
-        _, logits = self._forward_step_fn(model=self.model, data_iterator=inps)
+        (_, logits), _ = self._forward_step_fn(model=self.model, data_iterator=inps)
 
         # gather outputs from all dp ranks:
         logits = self._dp_gather(logits)
