@@ -197,7 +197,7 @@ class EvalHarnessAdapter(HFLM):
         self.model.module.train_mode()  # set back to train mode
         return reord.get_original(res)
 
-    def _loglikelihood_tokens(self, requests, disable_tqdm=False):
+    def _loglikelihood_tokens(self, requests, disable_tqdm=False, override_bs: int = None):
         """
         In this method, the model doesn't do any generation, but just returns log likelihoods
         for the next token, which eval harness uses to evaluate.
