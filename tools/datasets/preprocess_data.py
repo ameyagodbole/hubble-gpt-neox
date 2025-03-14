@@ -170,7 +170,7 @@ def yield_from_files(fnames: list, semaphore, decontam_results: Dict[str, Dict[i
     """
 
     def yielder(fname, semaphore, lines_to_skip):
-        for i, f in enumerate(lmd.Reader(fname).stream_data()):
+        for i, f in enumerate(lmd.Reader(fname).stream_data(), 1):
             # skip empty
             if not f:
                 continue
@@ -184,9 +184,9 @@ def yield_from_files(fnames: list, semaphore, decontam_results: Dict[str, Dict[i
             semaphore.acquire()
             yield f
 
-    for fname in fnames:
+    for fname in filter(lambda x: x, fnames):
         semaphore.acquire()
-        lines_to_skip = decontam_results.get(fname, None)
+        lines_to_skip = decontam_results.get(fname, {})
         lines_to_skip = {int(k): v for k, v in lines_to_skip.items()}
         yield from yielder(fname, semaphore, lines_to_skip)
 
