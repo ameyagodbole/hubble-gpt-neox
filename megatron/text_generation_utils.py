@@ -254,6 +254,8 @@ def stream_tokens(
         for i in range(0, len(stop_tokens)):
             stop_tokens[i] = torch.cuda.LongTensor(stop_tokens[i])
 
+    model.module.clear_cache()
+
     # Make sure context tokens + start tokens are the same across all ranks
     token_generation_start_index = torch.cuda.LongTensor(context_lengths)
     torch.distributed.broadcast(

@@ -136,6 +136,7 @@ class EvalHarnessAdapter(HFLM):
                          list of stop tokens.
         """
         self.model.module.inference_mode(use_cache=True)  # tell model to cache kv pairs
+        self.model.module.clear_cache()
         res = []
 
         # get only the args from each Instance object
@@ -208,6 +209,7 @@ class EvalHarnessAdapter(HFLM):
         self.model.module.inference_mode(
             use_cache=False
         )  # tell model to gather parallel outputs, but not cache key-value pairs
+        self.model.module.clear_cache()
 
         disable_tqdm = disable_tqdm if self.is_main else True
         res = []
@@ -490,9 +492,10 @@ class EvalHarnessAdapter(HFLM):
         results = evaluator.evaluate(
             lm=lm,
             task_dict=task_dict,
-            limit=10,  # limit,
+            # limit=4,  # limit,
             bootstrap_iters=bootstrap_iters,
-            log_samples=False,
+            log_samples=True,
+            write_out=True
         )
 
         results["config"] = {

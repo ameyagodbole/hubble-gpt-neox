@@ -184,11 +184,20 @@ class EmbeddingPipe(Embedding):
         assert (
             len(args) == 3
         ), f"Expected 3 arguments (input_ids, position_ids, attention_mask), but got {len(args)}."
+        # SAVE_DIR = "/lustre/fs01/External/nairr/USC/ameya/HubbleSuite/models/debug/neox/"
+        # torch.save(args[0].detach().cpu(),
+        #            f"{SAVE_DIR}/embedding_input_ids.pt")
+        # torch.save(args[1].detach().cpu(),
+        #            f"{SAVE_DIR}/embedding_position_ids.pt")
+        # torch.save(args[2].detach().cpu(),
+        #            f"{SAVE_DIR}/embedding_attention_mask.pt")
 
         input_ids = args[0]
         position_ids = args[1]
         attention_mask = args[2]
         embeddings = super().forward(input_ids, position_ids)
+        # torch.save(embeddings.detach().cpu(),
+        #            f"{SAVE_DIR}/embedding_output.pt")
         return embeddings, attention_mask
 
 

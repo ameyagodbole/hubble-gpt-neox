@@ -841,6 +841,9 @@ class ParallelSelfAttention(nn.Module):
     def forward(self, hidden_states, attention_mask, layer_past=None):
 
         # hidden_states: [sq, b, h]
+        # SAVE_DIR = "/lustre/fs01/External/nairr/USC/ameya/HubbleSuite/models/debug/neox/"
+        # torch.save(hidden_states.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_attn_input.pt")
 
         # =====================
         # Query, Key, and Value
@@ -873,6 +876,14 @@ class ParallelSelfAttention(nn.Module):
         if self.use_qk_layernorm:
             query_layer = self.qk_layernorm(query_layer)
             key_layer = self.qk_layernorm(key_layer)
+        
+        # print(f">> self.use_qk_layernorm: {self.use_qk_layernorm}")
+        # torch.save(query_layer.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_query_states.pt")
+        # torch.save(key_layer.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_key_states.pt")
+        # torch.save(value_layer.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_value_states.pt")
 
         if exists(self.rotary_emb):
             if exists(self.rotary_ndims):
@@ -895,6 +906,10 @@ class ParallelSelfAttention(nn.Module):
                 offset = layer_past[0].shape[0]
                 seq_len += offset
             cos, sin = self.rotary_emb(value_layer, seq_len=seq_len)
+            # torch.save(cos.detach().cpu(),
+            #            f"{SAVE_DIR}/layer{self.layer_number}_cos.pt")
+            # torch.save(sin.detach().cpu(),
+            #            f"{SAVE_DIR}/layer{self.layer_number}_sin.pt")
             if self.rope_fusion:
                 query_layer, key_layer = (
                     fused_apply_rotary_pos_emb_cached(rot, cos, sin)
@@ -923,6 +938,10 @@ class ParallelSelfAttention(nn.Module):
             value_layer = torch.cat(
                 (past_value.type_as(value_layer), value_layer), dim=0
             )
+        # torch.save(query_layer.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_post_rot_query_states.pt")
+        # torch.save(key_layer.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_post_rot_key_states.pt")
 
         if self.use_cache:
             present = torch.stack((key_layer, value_layer))
@@ -946,6 +965,8 @@ class ParallelSelfAttention(nn.Module):
             self.hidden_size_per_partition,
         )
         context_layer = context_layer.view(*new_context_layer_shape)
+        # torch.save(context_layer.detach().cpu(),
+        #            f"{SAVE_DIR}/layer{self.layer_number}_attn_output.pt")
 
         # =================
         # Output. [sq, b, h]
@@ -1252,6 +1273,9 @@ class ParallelTransformerLayer(nn.Module):
                 # pseudocode:
                 # x = x + attn(ln1(x))
                 # x = x + mlp(ln2(x))
+                # SAVE_DIR = "/lustre/fs01/External/nairr/USC/ameya/HubbleSuite/models/debug/neox/"
+                # torch.save(x.detach().cpu(),
+                #            f"{SAVE_DIR}/layer{self.layer_number}_x.pt")
 
                 residual = x
 
@@ -1263,6 +1287,9 @@ class ParallelTransformerLayer(nn.Module):
                 if self.use_cache:
                     attention_output, presents = attention_output
                     self.layer_past = presents
+                # torch.save(attention_output.detach().cpu(),
+                #            f"{SAVE_DIR}/layer{self.layer_number}_attn_out.pt")
+
                 with torch.enable_grad() if not self.eval else nullcontext():
                     if attention_bias is not None:
                         # Use special bias_dropout_fn if we have a bias term from the above attention layer
@@ -1283,6 +1310,8 @@ class ParallelTransformerLayer(nn.Module):
                             + residual
                         )
 
+                # torch.save(attention_output.detach().cpu(),
+                #            f"{SAVE_DIR}/layer{self.layer_number}_post_attn_res.pt")
                 # output = x + mlp(ln2(x))
                 if self.neox_args.te_layernorm_mlp:
                     layernorm_output = attention_output
@@ -1291,7 +1320,8 @@ class ParallelTransformerLayer(nn.Module):
                 mlp_bias = torch.tensor(
                     0.0, device=layernorm_output.device, dtype=layernorm_output.dtype
                 )
-
+                # torch.save(layernorm_output.detach().cpu(),
+                #            f"{SAVE_DIR}/layer{self.layer_number}_post_attn_ln.pt")
                 if self.num_experts == 1:
                     mlp_output, mlp_bias = self.mlp(layernorm_output)
                 else:
@@ -1317,6 +1347,8 @@ class ParallelTransformerLayer(nn.Module):
                             residual=attention_output,
                             prob=self.hidden_dropout,
                         )
+                # torch.save(output.detach().cpu(),
+                #            f"{SAVE_DIR}/layer{self.layer_number}_output.pt")
 
             return output, moe_loss
 

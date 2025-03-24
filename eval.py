@@ -65,7 +65,8 @@ def main(input_args=None, overwrite_values=None):
                     comet_experiment=neox_args.comet_experiment,
                 )
 
-        pprint(results)
+        res_no_samples = {res_k: res_v for res_k, res_v in results.items() if res_k != 'samples'}
+        pprint(res_no_samples)
         results_path = (
             f'eval_results_{datetime.now().strftime("%m-%d-%Y-%H-%M-%S")}.json'
         )
