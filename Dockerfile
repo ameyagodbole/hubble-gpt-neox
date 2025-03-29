@@ -17,10 +17,10 @@ FROM nvcr.io/nvidia/pytorch:24.02-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
 # metainformation
-LABEL org.opencontainers.image.version = "2.0"
-LABEL org.opencontainers.image.authors = "contact@eleuther.ai"
-LABEL org.opencontainers.image.source = "https://www.github.com/eleutherai/gpt-neox"
-LABEL org.opencontainers.image.licenses = " Apache-2.0"
+LABEL org.opencontainers.image.version="2.0"
+LABEL org.opencontainers.image.authors="contact@eleuther.ai"
+LABEL org.opencontainers.image.source="https://www.github.com/eleutherai/gpt-neox"
+LABEL org.opencontainers.image.licenses=" Apache-2.0"
 LABEL org.opencontainers.image.base.name="nvcr.io/nvidia/pytorch:24.02-py3"
 
 #### System package (uses default Python 3 version in Ubuntu 20.04)
@@ -59,32 +59,56 @@ RUN mv /usr/local/mpi/bin/mpirun /usr/local/mpi/bin/mpirun.real && \
     chmod a+x /usr/local/mpi/bin/mpirun
 
 #### User account
-RUN useradd --create-home --uid 1000 --shell /bin/bash mchorse && \
-    usermod -aG sudo mchorse && \
-    echo "mchorse ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN useradd --create-home --uid 1000 --shell /bin/bash ameyagod && \
+    usermod -aG sudo ameyagod && \
+    echo "ameyagod ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+RUN useradd --create-home --uid 1001 --shell /bin/bash jtwei && \
+    usermod -aG sudo jtwei && \
+    echo "jtwei ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+RUN useradd --create-home --uid 1002 --shell /bin/bash ryanwan && \
+    usermod -aG sudo ryanwan && \
+    echo "ryanwan ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+RUN chmod 0440 /etc/sudoers
 
 ## SSH config and bashrc
-RUN mkdir -p /home/mchorse/.ssh /job && \
-    echo 'Host *' > /home/mchorse/.ssh/config && \
-    echo '    StrictHostKeyChecking no' >> /home/mchorse/.ssh/config && \
-    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/home/mchorse/.local/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
+RUN mkdir -p /home/ameyagod/.ssh /job && \
+    echo 'Host *' > /home/ameyagod/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /home/ameyagod/.ssh/config && \
+    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/ameyagod/.bashrc && \
+    echo 'export PATH=/home/ameyagod/.local/bin:$PATH' >> /home/ameyagod/.bashrc && \
+    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/ameyagod/.bashrc && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/ameyagod/.bashrc
+
+RUN mkdir -p /home/jtwei/.ssh /job && \
+    echo 'Host *' > /home/jtwei/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /home/jtwei/.ssh/config && \
+    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/jtwei/.bashrc && \
+    echo 'export PATH=/home/jtwei/.local/bin:$PATH' >> /home/jtwei/.bashrc && \
+    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/jtwei/.bashrc && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/jtwei/.bashrc
+
+RUN mkdir -p /home/ryanwan/.ssh /job && \
+    echo 'Host *' > /home/ryanwan/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /home/ryanwan/.ssh/config && \
+    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/ryanwan/.bashrc && \
+    echo 'export PATH=/home/ryanwan/.local/bin:$PATH' >> /home/ryanwan/.bashrc && \
+    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/ryanwan/.bashrc && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/ryanwan/.bashrc
 
 #### Python packages
 COPY requirements/* ./
-RUN python -m pip install --no-cache-dir -r requirements.txt && pip install -r requirements-onebitadam.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
+# flash-attention is already isntalled
+# clamp pydantic and wandb
+RUN python -m pip install pydantic==2.11.0
 RUN python -m pip install -r requirements-wandb.txt
-RUN python -m pip install protobuf==3.20.*
 
-COPY megatron/fused_kernels/ /megatron/fused_kernels
-WORKDIR /megatron/fused_kernels
-RUN python setup.py install
+#COPY megatron/fused_kernels/ /megatron/fused_kernels
+#WORKDIR /megatron/fused_kernels
+#RUN python setup.py install
 
 # Clear staging
 RUN mkdir -p /tmp && chmod 0777 /tmp
-
-#### SWITCH TO mchorse USER
-USER mchorse
-WORKDIR /home/mchorse
