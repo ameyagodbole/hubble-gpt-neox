@@ -158,7 +158,7 @@ def _get_cuda_bare_metal_version(cuda_dir):
 
 def _create_build_dir(buildpath):
     try:
-        os.mkdir(buildpath)
+        os.makedirs(buildpath)
     except OSError:
         if not os.path.isdir(buildpath):
             print(f"Creation of the build directory {buildpath} failed")
