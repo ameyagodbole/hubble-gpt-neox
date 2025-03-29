@@ -58,7 +58,7 @@ def load(neox_args=None):
 
     # Build path
     srcpath = pathlib.Path(__file__).parent.absolute()
-    buildpath = srcpath / "build"
+    buildpath = pathlib.Path("/megatron/fused_kernels") / "build"
     _create_build_dir(buildpath)
 
     # Determine verbosity
