@@ -35,13 +35,13 @@ def main(input_args=None):
 
     # deepspeed.launcher.launch.main(deepspeed_main_args)
 
-    # cmd = ["torchrun", "--nnodes", os.environ["SLURM_JOB_NUM_NODES"],
-    #        "--nproc_per_node". os.environ["SLURM_GPUS_ON_NODE"],
-    #        "--master-addr", os.environ["MASTER_ADDR"],
-    #        "--master-port", os.environ["MASTER_PORT"],
-    #        "--node-rank", os.environ["RANK"],
-    #        "--log-dir", f"{os.getcwd()}/logs",]
-    cmd = ["deepspeed", "--no_ssh", "--node_rank", os.environ["SLURM_LOCALID"]] + deepspeed_main_args
+    cmd = ["torchrun", "--nnodes", os.environ["SLURM_JOB_NUM_NODES"],
+           "--nproc-per-node", os.environ["SLURM_GPUS_ON_NODE"],
+           "--master-addr", os.environ["MASTER_ADDR"],
+           "--master-port", os.environ["MASTER_PORT"],
+           "--node-rank", os.environ["RANK"],
+           "--log-dir", f"{os.getcwd()}/logs",] + deepspeed_main_args[-5:]
+    # cmd = ["deepspeed", "--no_ssh"] + deepspeed_main_args
     env = os.environ.copy()
     curr_path = os.path.abspath('.')
     if 'PYTHONPATH' in env:
@@ -63,3 +63,4 @@ def main(input_args=None):
 
 if __name__ == "__main__":
     main()
+
