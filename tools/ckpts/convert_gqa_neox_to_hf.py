@@ -192,8 +192,9 @@ def load_partitions(
 
     print(f"Loaded {len(loaded_tp_ranks)} model states for layer {layer_idx}.")
     print(f"> dtypes for layer {layer_idx} (n_tp_ranks={len(loaded_tp_ranks)}):")
-    for k, v in loaded_tp_ranks[0].items():
-        print(f">> {k}: {v.dtype} ({v.shape})")
+    if not sequential:
+        for k, v in loaded_tp_ranks[0].items():
+            print(f">> {k}: {v.dtype} ({v.shape})")
 
     return loaded_tp_ranks
 
