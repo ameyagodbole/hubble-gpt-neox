@@ -211,7 +211,7 @@ def get_state(
         # print(f"State Dicts: {state_dicts}")
         # print(f"State Dict Keys: {[state_dict[key] for state_dict in state_dicts]}")
         # print(f"Returning {[state_dict[key] for state_dict in state_dicts]}")
-        return [state_dict[key] for state_dict in state_dicts]
+        return [state_dict['module'][key] for state_dict in state_dicts]
     else:
         # For the PipelineModule case, we don't need any key / module prefix. just grab this weight value.
         # layer_idx is also ignored because we've loaded only this layer's weights, ahead of time.
