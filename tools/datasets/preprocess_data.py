@@ -21,7 +21,6 @@ import argparse
 import multiprocessing
 import os
 import sys
-import json
 
 import lm_dataformat as lmd
 import numpy as np

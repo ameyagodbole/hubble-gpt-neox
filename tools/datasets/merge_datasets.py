@@ -37,7 +37,7 @@ def main(args):
     for prefix in sorted(prefixes):
         if builder is None:
             dataset = indexed_dataset.make_dataset(
-                os.path.join(args.input, prefix), "mmap"
+                os.path.join(args.input, prefix), "infer"
             )
 
             if isinstance(dataset, indexed_dataset.MMapIndexedDataset):
