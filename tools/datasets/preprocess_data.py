@@ -21,6 +21,7 @@ import argparse
 import multiprocessing
 import os
 import sys
+import json
 
 import lm_dataformat as lmd
 import numpy as np
@@ -34,6 +35,9 @@ import time
 import tqdm
 import torch
 import ftfy
+import json
+
+from typing import Dict, List, Set
 
 from megatron.tokenizer import build_tokenizer
 from megatron.data import indexed_dataset
@@ -84,6 +88,12 @@ def get_args(input_args=None):
         default=None,
         help="Optional: Number of documents in the input data (if known) for an accurate progress bar.",
         type=int,
+    )
+    group.add_argument(
+        "--decontam-results",
+        default=None,
+        help="json file containing fn => [ list of line numbers to skip ]",
+        type=str,
     )
     group = parser.add_argument_group(title="tokenizer")
     group.add_argument(
@@ -151,7 +161,7 @@ def get_args(input_args=None):
     return args
 
 
-def yield_from_files(fnames: list, semaphore):
+def yield_from_files(fnames: list, semaphore, decontam_results: Dict[str, Dict[int, object]]):
     """
     Iterator over input documents using lm_dataformat. Should be able to handle jsons / texts /
     other compressed formats. Also filters out empty documents.
@@ -159,15 +169,26 @@ def yield_from_files(fnames: list, semaphore):
     :param fnames: list of filenames
     """
 
-    def yielder(fname, semaphore):
-        for f in filter(lambda x: x, lmd.Reader(fname).stream_data()):
+    def yielder(fname, semaphore, lines_to_skip):
+        for i, f in enumerate(lmd.Reader(fname).stream_data(), 1):
+            # skip empty
+            if not f:
+                continue
+
+            # skip contaminated documents
+            if lines_to_skip and i in lines_to_skip:
+                print('=== Skipping contaminated example ===\n', 
+                        json.dumps({'fn':fname, 'linenum':i, 'text':f, 'metadata':lines_to_skip[i]}))
+                continue
+
             semaphore.acquire()
             yield f
 
     for fname in filter(lambda x: x, fnames):
         semaphore.acquire()
-
-        yield from yielder(fname, semaphore)
+        lines_to_skip = decontam_results.get(fname, {})
+        lines_to_skip = {int(k): v for k, v in lines_to_skip.items()}
+        yield from yielder(fname, semaphore, lines_to_skip)
 
 
 def main(input_args=None):
@@ -182,7 +203,8 @@ def main(input_args=None):
     semaphore = Semaphore(10000 + args.workers)
 
     # use multiprocessing to iterate over input documents
-    fin = yield_from_files(args.input.split(","), semaphore)
+    decontam_results = json.loads(open(args.decontam_results, 'rt').read())
+    fin = yield_from_files(args.input.split(","), semaphore, decontam_results)
 
     if args.workers > 1:
         pool = multiprocessing.Pool(args.workers, initializer=encoder.initializer)
